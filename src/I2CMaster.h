@@ -17,7 +17,7 @@
 /* Standard I2C mode */
 #define I2C_MODE    (0)
 /* 7-bit I2C addresses of Temperature Sensor */
-#define I2C_TEMP_ADDR_7BIT  (0x48) // OK for TD74A0
+#define I2C_TEMP_ADDR_7BIT  (0x40) // OK for TD74A0
 
 namespace I2C_Master {
 
