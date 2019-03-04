@@ -32,9 +32,12 @@
 #include "board.h"
 #include <atomic>
 #include <cctype>
+#include <string>
 #include "DigitalIoPin.h"
 #include "LiquidCrystal.h"
 #include "ritimer_15xx.h"
+#include "I2CMaster.h"
+#include "ITM_conv.h"
 
 static volatile std::atomic_int counter;
 #define TICKRATE_HZ1 (1000)
@@ -82,11 +85,12 @@ int main(void)
 	SysTick_Config(sysTickRate / TICKRATE_HZ1);
 
 	Chip_RIT_Init(LPC_RITIMER);
-
+	I2C_Master::I2C_Master I2C;
+	ITM_conv printer;
 	DigitalIoPin display(0, 8, false);	// A0
-	DigitalIoPin sw1(1, 9, true, true, true);
-	DigitalIoPin sw2(1, 11, true, true, true);
-	DigitalIoPin sw3(0, 17, true, true, true);
+	DigitalIoPin b1(0, 29, true, true, true);
+	DigitalIoPin b2(0, 9, true, true, true);
+	DigitalIoPin b3(0, 10, true, true, true);
 
 	DigitalIoPin a0(0, 8, false); 	// RS
 	DigitalIoPin a1(1, 6, false);	// EN
@@ -107,25 +111,26 @@ int main(void)
 
 
 #if TASK == 1
-		if(sw1.read()){
+		if(b1.read()){
 			Sleep(8);
 			lcd.setCursor(13, pos);
-			if(!sw1.read()){
+			if(!b1.read()){
+				set[pos]--;
+				lcd.print(std::to_string(I2C.ReadValueI2CM(3)));
+				printer.print(I2C.ReadValueI2CM(3));
+			}
+		}
+		if(b2.read()){
+			Sleep(8);
+			lcd.setCursor(13, pos);
+			if(!b2.read()){
 				set[pos]--;
 				lcd.print("42");
 			}
 		}
-		if(sw2.read()){
+		if(b3.read()){
 			Sleep(8);
-			lcd.setCursor(13, pos);
-			if(!sw2.read()){
-				set[pos]--;
-				lcd.print("42");
-			}
-		}
-		if(sw3.read()){
-			Sleep(8);
-			if(!sw3.read()){
+			if(!b3.read()){
 				if(pos == 1) pos = 0;
 				if(pos == 0) pos = 1;
 			}

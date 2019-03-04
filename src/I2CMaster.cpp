@@ -65,7 +65,7 @@ void I2C_Master::Init_I2C_PinMux(void)
 uint8_t I2C_Master::ReadValueI2CM(int size)
 {
 	uint8_t values[size];
-	uint8_t lm75TempRegisterAddress = 0;
+	uint8_t lm75TempRegisterAddress = 0xF1;
 
 	/* Read LM75 temperature sensor */
 	SetupXferRecAndExecute(
@@ -77,7 +77,7 @@ uint8_t I2C_Master::ReadValueI2CM(int size)
 		&lm75TempRegisterAddress, 1,
 
 		/* Receive back two bytes, the contents of the temperature register */
-		values, 2);
+		values, size);
 
 	/* Test for valid operation */
 	if (i2cmXferRec.status == I2CM_STATUS_OK) {
@@ -85,10 +85,10 @@ uint8_t I2C_Master::ReadValueI2CM(int size)
 		return ("Temperature read over I2C is %d.%d degrees C.\r\n",
 			(int) temperature[0], (temperature[1] & 0x80) ? 5 : 0 );
 			*/
-		return values[0];
+		return values[1];
 	}
 
-	return values[0];
+	return values[1];
 
 }
 
