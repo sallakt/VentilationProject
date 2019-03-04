@@ -63,6 +63,9 @@ uint8_t Menu::getPsa(){
  */
 void Menu::setPsa(uint8_t psa){
 	if(psa > 0){
+		if(this->psa != psa){
+			changed = true;
+		}
 		this->psa = psa;
 	}
 

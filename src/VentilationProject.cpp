@@ -34,12 +34,14 @@
 #include <cctype>
 #include <string>
 #include "DigitalIoPin.h"
+#include "Menu.h"
 #include "LiquidCrystal.h"
 #include "ritimer_15xx.h"
 #include "I2CMaster.h"
 #include "ITM_conv.h"
 
 static volatile std::atomic_int counter;
+static volatile std::atomic_int sensorCounter;
 #define TICKRATE_HZ1 (1000)
 #define TASK (1)
 
@@ -48,9 +50,11 @@ extern "C" {
 	#endif
 	void SysTick_Handler(void)
 	{
+		sensorCounter--;
 		if(counter > 0)
 		{
 			counter--;
+
 		}else{
 
 		}
@@ -74,8 +78,7 @@ void Sleep(int ms)
 int main(void)
 {
 	uint32_t sysTickRate;
-	uint32_t set[2] = {0, 0};
-	uint32_t pos = 0;
+	uint32_t psa = 30;
 
 	/* Setup System */
 	SystemCoreClockUpdate();
@@ -87,7 +90,7 @@ int main(void)
 	Chip_RIT_Init(LPC_RITIMER);
 	I2C_Master::I2C_Master I2C;
 	ITM_conv printer;
-	DigitalIoPin display(0, 8, false);	// A0
+
 	DigitalIoPin b1(0, 29, true, true, true);
 	DigitalIoPin b2(0, 9, true, true, true);
 	DigitalIoPin b3(0, 10, true, true, true);
@@ -98,45 +101,34 @@ int main(void)
 	DigitalIoPin a3(0, 5, false);	// D5
 	DigitalIoPin a4(0, 6, false);	// D6
 	DigitalIoPin a5(0, 7, false);	// D7
-	LiquidCrystal lcd(&a0, &a1, &a2, &a3, &a4, &a5);
 
+	LiquidCrystal lcd(&a0, &a1, &a2, &a3, &a4, &a5);
 	lcd.begin(16, 2);
 	lcd.setCursor(0, 1);
 
-	lcd.setCursor(0, 0);
-	lcd.print("Fan Speed: ");
-	lcd.setCursor(0, 1);
-	lcd.print("Pressure: ");
+	Menu menu(&lcd, &b1, &b2, &b3, &Sleep);
+	menu.updateDisplay();
+
 	while(1) {
-
-
-#if TASK == 1
-		if(b1.read()){
-			Sleep(8);
-			lcd.setCursor(13, pos);
-			if(!b1.read()){
-				set[pos]--;
-				lcd.print(std::to_string(I2C.ReadValueI2CM(3)));
-				printer.print(I2C.ReadValueI2CM(3));
-			}
+		if(sensorCounter < 0){
+			sensorCounter = 1000;
+			psa = I2C.ReadValueI2CM(3);
+			//printer.print(I2C.ReadValueI2CM(3));
 		}
-		if(b2.read()){
-			Sleep(8);
-			lcd.setCursor(13, pos);
-			if(!b2.read()){
-				set[pos]--;
-				lcd.print("42");
-			}
+		menu.checkInputs();
+		if(menu.getMode()){
+			menu.getSpeed();
+			menu.setPsa(psa);
+		}else{
+			//Calculate Speed
+			menu.setSpeed(30);
+			menu.setPsa(psa);
 		}
-		if(b3.read()){
-			Sleep(8);
-			if(!b3.read()){
-				if(pos == 1) pos = 0;
-				if(pos == 0) pos = 1;
-			}
+		// Only update menu if there was a new input or the psa has changed
+		if(menu.hasNewValue()){
+			menu.clear();
+			menu.updateDisplay();
 		}
-#endif
-
 
 	}
 
