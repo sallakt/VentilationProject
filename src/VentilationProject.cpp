@@ -30,16 +30,17 @@
  */
 #include "chip.h"
 #include "board.h"
-#include "I2CMaster.h"
 #include <atomic>
 #include <cctype>
 #include <string>
 #include "DigitalIoPin.h"
 #include "Menu.h"
 #include "LiquidCrystal.h"
-#include "ritimer_15xx.h"
 #include "I2CMaster.h"
 #include "ITM_conv.h"
+#include "ModbusMaster.h"
+#include "ModbusRegister.h"
+#include "LpcUart.h"
 
 static volatile std::atomic_int counter;
 static volatile std::atomic_int sensorCounter;
