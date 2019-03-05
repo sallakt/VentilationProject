@@ -6,16 +6,15 @@
  */
 
 #include "I2CMaster.h"
-#include "chip.h"
 
-namespace I2C_Master {
+#include "chip.h"
 
 
 /* I2CM transfer record */
 static I2CM_XFER_T  i2cmXferRec;
 
 
-I2C_Master::I2C_Master() {
+I2CMaster::I2CMaster() {
 
 	/* Setup I2C  */
 	Init_I2C_PinMux();
@@ -37,7 +36,7 @@ I2C_Master::I2C_Master() {
 
 }
 
-void I2C_Master::SetupXferRecAndExecute(uint8_t devAddr,
+void I2CMaster::SetupXferRecAndExecute(uint8_t devAddr,
 								   uint8_t *txBuffPtr,
 								   uint16_t txSize,
 								   uint8_t *rxBuffPtr,
@@ -54,7 +53,7 @@ void I2C_Master::SetupXferRecAndExecute(uint8_t devAddr,
 	Chip_I2CM_XferBlocking(LPC_I2C0, &i2cmXferRec);
 }
 
-void I2C_Master::Init_I2C_PinMux(void)
+void I2CMaster::Init_I2C_PinMux(void)
 {
 	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 22, IOCON_DIGMODE_EN | I2C_MODE);
 	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 23, IOCON_DIGMODE_EN | I2C_MODE);
@@ -62,7 +61,7 @@ void I2C_Master::Init_I2C_PinMux(void)
 	Chip_SWM_EnableFixedPin(SWM_FIXED_I2C0_SDA);
 }
 
-uint8_t I2C_Master::ReadValueI2CM(int size)
+uint8_t I2CMaster::ReadValueI2CM(int size)
 {
 	uint8_t values[size];
 	uint8_t lm75TempRegisterAddress = 0xF1;
@@ -92,8 +91,7 @@ uint8_t I2C_Master::ReadValueI2CM(int size)
 
 }
 
-I2C_Master::~I2C_Master() {
+I2CMaster::~I2CMaster() {
 	// TODO Auto-generated destructor stub
 }
 
-} /* namespace I2C_Master */

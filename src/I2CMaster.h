@@ -19,12 +19,11 @@
 /* 7-bit I2C addresses of Temperature Sensor */
 #define I2C_TEMP_ADDR_7BIT  (0x40) // OK for TD74A0
 
-namespace I2C_Master {
 
-class I2C_Master {
+class I2CMaster {
 	public:
-		I2C_Master();
-		virtual ~I2C_Master();
+		I2CMaster();
+		virtual ~I2CMaster();
 		uint8_t ReadValueI2CM(int size);
 	private:
 		void Init_I2C_PinMux(void);
@@ -35,7 +34,5 @@ class I2C_Master {
 										   uint16_t rxSize);
 
 };
-
-} /* namespace I2C_Master */
 
 #endif /* I2CMASTER_H_ */
