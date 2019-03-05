@@ -38,12 +38,8 @@
 #include "Menu.h"
 #include "LiquidCrystal.h"
 #include "ritimer_15xx.h"
-<<<<<<< Updated upstream
 #include "I2CMaster.h"
 #include "ITM_conv.h"
-=======
-#include "Menu.h"
->>>>>>> Stashed changes
 
 static volatile std::atomic_int counter;
 static volatile std::atomic_int sensorCounter;
@@ -96,21 +92,10 @@ int main(void)
 	I2C_Master::I2C_Master I2C;
 	ITM_conv printer;
 
-<<<<<<< Updated upstream
 	DigitalIoPin b1(0, 29, true, true, true);
 	DigitalIoPin b2(0, 9, true, true, true);
 	DigitalIoPin b3(0, 10, true, true, true);
-=======
-	DigitalIoPin display(0, 8, false);	// A0
-	/*
-	DigitalIoPin sw1(0, 29, true, true, true);
-	DigitalIoPin sw2(0, 9, true, true, true);
-	DigitalIoPin sw3(0, 10, true, true, true);
-	*/
-	DigitalIoPin sw1(1, 9, true, true, true);
-	DigitalIoPin sw2(1, 11, true, true, true);
-	DigitalIoPin sw3(0, 17, true, true, true);
->>>>>>> Stashed changes
+
 
 	DigitalIoPin a0(0, 8, false); 	// RS
 	DigitalIoPin a1(1, 6, false);	// EN
@@ -118,7 +103,6 @@ int main(void)
 	DigitalIoPin a3(0, 5, false);	// D5
 	DigitalIoPin a4(0, 6, false);	// D6
 	DigitalIoPin a5(0, 7, false);	// D7
-<<<<<<< Updated upstream
 
 	LiquidCrystal lcd(&a0, &a1, &a2, &a3, &a4, &a5);
 	lcd.begin(16, 2);
@@ -148,29 +132,7 @@ int main(void)
 			menu.updateDisplay();
 		}
 
-=======
-	LiquidCrystal lcd(&a0, &a1, &a2, &a3, &a4, &a5);
-	Menu menu(&lcd, &sw1, &sw2, &sw3, &Sleep);
-	I2CMaster sensor;
-	lcd.begin(16, 2);
 
-
-	while(1) {
-		menu.checkInputs();
-		if(menu.getMode()){
-			//Calculate Speed
-			menu.setSpeed(30);
-			menu.setPsa(30);
-		}else{
-			menu.getSpeed();
-			menu.setPsa(10);
-		}
-		// Only update menu if there was a new input or the psa has changed
-		if(menu.hasNewValue() || menu.getPsa() != 30){
-			menu.clear();
-			menu.updateDisplay();
-		}
->>>>>>> Stashed changes
 	}
 
 
