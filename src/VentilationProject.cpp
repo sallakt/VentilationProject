@@ -44,14 +44,22 @@
 
 static volatile std::atomic_int counter;
 static volatile std::atomic_int sensorCounter;
+static volatile uint32_t systicks;
+
 #define TICKRATE_HZ1 (1000)
 #define TASK (1)
+
+ITM_conv *p;
+Menu *m;
+I2CMaster *i;
+
 
 #ifdef __cplusplus
 extern "C" {
 	#endif
 	void SysTick_Handler(void)
 	{
+		systicks++;
 		sensorCounter--;
 		if(counter > 0)
 		{
@@ -75,6 +83,49 @@ void Sleep(int ms)
 	}
 }
 
+uint32_t millis() {
+	return systicks;
+}
+
+bool setFrequency(ModbusMaster& node, uint16_t freq)
+{
+	int result;
+	int ctr;
+	bool atSetpoint;
+	const int delay = 500;
+
+	ModbusRegister Frequency(&node, 1); // reference 1
+	ModbusRegister StatusWord(&node, 3);
+
+	Frequency = freq; // set motor frequency
+
+	p->print("\nSet freq = %d"); // for debugging
+	p->print((int) ctr * delay);
+
+
+	// wait until we reach set point or timeout occurs
+	ctr = 0;
+	atSetpoint = false;
+	do {
+		Sleep(delay);
+		// read status word
+		result = StatusWord;
+		// check if we are at setpoint
+		if (result >= 0 && (result & 0x0100)) atSetpoint = true;
+		ctr++;
+	} while(ctr < 20 && !atSetpoint);
+	p->print("\n El:"); // for debugging
+	p->print((int) ctr * delay);
+
+
+
+
+	return atSetpoint;
+}
+
+
+
+
 
 
 int main(void)
@@ -90,8 +141,10 @@ int main(void)
 	SysTick_Config(sysTickRate / TICKRATE_HZ1);
 
 	Chip_RIT_Init(LPC_RITIMER);
-	I2C_Master::I2C_Master I2C;
+	I2CMaster I2C;
+	i = &I2C;
 	ITM_conv printer;
+	p = &printer;
 
 	DigitalIoPin b1(0, 29, true, true, true);
 	DigitalIoPin b2(0, 9, true, true, true);
@@ -111,24 +164,61 @@ int main(void)
 
 	Menu menu(&lcd, &b1, &b2, &b3, &Sleep);
 	menu.updateDisplay();
+	m = &menu;
+
+
+	// Modbus
+	LpcPinMap none = {-1, -1};
+	LpcPinMap txpin = { 0, 18 }; // transmit pin that goes to debugger's UART->USB converter
+	LpcPinMap rxpin = { 0, 13 }; // receive pin that goes to debugger's UART->USB converter
+	LpcUartConfig cfg = { LPC_USART0, 115200, UART_CFG_DATALEN_8 | UART_CFG_PARITY_NONE | UART_CFG_STOPLEN_1, false, txpin, rxpin, none, none };
+	LpcUart dbgu(cfg);
+	Chip_SWM_MovablePortPinAssign(SWM_SWO_O, 1, 2); // Needed for SWO printf
+
+	ModbusMaster node(2); // Create modbus object that connects to slave id 2
+	node.begin(9600); // set transmission rate - other parameters are set inside the object and can't be changed here
+	ModbusRegister ControlWord(&node, 0);
+	ModbusRegister StatusWord(&node, 3);
+	ModbusRegister OutputFrequency(&node, 102);
+	ModbusRegister Current(&node, 103);
+
+	// Startup
+	ControlWord = 0x0406; // prepare for starting
+	Sleep(1000); // give converter some time to set up
+	ControlWord = 0x047F; // set drive to start mode
+	Sleep(1000);
+
+
 
 	while(1) {
+
 		if(sensorCounter < 0){
 			sensorCounter = 1000;
-			psa = I2C.ReadValueI2CM(3);
+			uint8_t *val = I2C.ReadValueI2CM(3);
+			p->print("\n Values: ");
+			p->print(*val);
+			val++;
+			p->print(" - ");
+			p->print(*val);
+			val++;
+			p->print(" - ");
+			p->print(*val);
+
+			psa = *val;
+			menu.setPsa(psa);
 			//printer.print(I2C.ReadValueI2CM(3));
 		}
+
 		menu.checkInputs();
-		if(menu.getMode()){
-			menu.getSpeed();
-			menu.setPsa(psa);
-		}else{
-			//Calculate Speed
-			menu.setSpeed(30);
-			menu.setPsa(psa);
-		}
-		// Only update menu if there was a new input or the psa has changed
 		if(menu.hasNewValue()){
+			if(menu.getMode()){
+				setFrequency(node, menu.getSpeed()*200);
+			}else{
+				//Calculate Speed
+				uint8_t calc = 50; // calculated value
+				setFrequency(node, calc *200);
+				menu.setSpeed(calc);
+			}
 			menu.clear();
 			menu.updateDisplay();
 		}
