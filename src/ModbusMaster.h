@@ -51,6 +51,7 @@ Set to 1 to enable debugging features within class:
 // include types & constants of Wiring core API
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
+
 #else
 //#include "WProgram.h"
 #include <stdint.h>
@@ -67,10 +68,10 @@ uint32_t millis();
 // functions to calculate Modbus Application Data Unit CRC
 //#include "util/crc16.h"
 // moved inlcuding crc16.h to ModbusMaster.cpp
-
+#include "word.h"
 // functions to manipulate words
 ///#include "util/word.h"
-#include "word.h"
+
 
 
 #include "SerialPort.h"
