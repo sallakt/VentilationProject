@@ -61,10 +61,10 @@ void I2CMaster::Init_I2C_PinMux(void)
 	Chip_SWM_EnableFixedPin(SWM_FIXED_I2C0_SDA);
 }
 
-uint8_t* I2CMaster::ReadValueI2CM(int size)
+uint8_t* I2CMaster::ReadValueI2CM(uint8_t values[], int size)
 {
-	uint8_t values[size];
-	uint8_t lm75TempRegisterAddress = 0xF1;
+	//uint8_t values[size];
+	uint8_t RegisterAddress = 0xF1;
 
 	/* Read LM75 temperature sensor */
 	SetupXferRecAndExecute(
@@ -73,17 +73,14 @@ uint8_t* I2CMaster::ReadValueI2CM(int size)
 		I2C_TEMP_ADDR_7BIT,
 
 		/* Transmit one byte, the LM75 temp register address */
-		&lm75TempRegisterAddress, 1,
+		&RegisterAddress, 1,
 
 		/* Receive back two bytes, the contents of the temperature register */
 		values, size);
 
 	/* Test for valid operation */
 	if (i2cmXferRec.status == I2CM_STATUS_OK) {
-		/* Output temperature.11
-		return ("Temperature read over I2C is %d.%d degrees C.\r\n",
-			(int) temperature[0], (temperature[1] & 0x80) ? 5 : 0 );
-			*/
+
 		return values;
 	}
 

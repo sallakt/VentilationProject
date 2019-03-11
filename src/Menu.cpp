@@ -76,35 +76,39 @@ void Menu::setPsa(uint8_t psa){
  * eventually move this to the main and add two new Methods (incSpeed / decSpeed)
  */
 void Menu::checkInputs(){
-	if(b1->read()){ // Change Mode
-		Sleep(8);
-		if(!b1->read()){
+
+		if(b1->read()){
+			Sleep(3);
+			if(!b1->read()){// if Manual increase speed
+				if(manualMode){
+					if(speed<100){
+						speed++;
+						changed = true;
+					}
+				}
+
+			}
+		}
+		if(b3->read()){
+			Sleep(3);
+			if(!b3->read()){// if Manual increase speed
+				if(manualMode){
+					if(speed>0){
+						speed--;
+						changed = true;
+					}
+				}
+			}
+		}
+
+
+	if(b2->read()){ // Change Mode
+		Sleep(3);
+		if(!b2->read()){
 			changeMode();
 			changed = true;
 		}
 	}
-	if(manualMode){
-		if(b2->read()){	// if Manual increase speed
-			Sleep(8);
-			if(!b2->read()){
-				if(speed<100){
-					speed++;
-					changed = true;
-				}
-
-			}
-		}
-		if(b3->read()){ // if Manual decrease speed
-			Sleep(8);
-			if(!b3->read()){
-				if(speed>0){
-					speed--;
-					changed = true;
-				}
-			}
-		}
-	}
-
 
 }
 

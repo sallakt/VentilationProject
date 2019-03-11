@@ -146,28 +146,28 @@ int main(void)
 	ITM_conv printer;
 	p = &printer;
 
-	DigitalIoPin b1(0, 29, true, true, true);
-	DigitalIoPin b2(0, 9, true, true, true);
-	DigitalIoPin b3(0, 10, true, true, true);
 
-
+	// init Display
 	DigitalIoPin a0(0, 8, false); 	// RS
 	DigitalIoPin a1(1, 6, false);	// EN
 	DigitalIoPin a2(1, 8, false); 	// D4
 	DigitalIoPin a3(0, 5, false);	// D5
 	DigitalIoPin a4(0, 6, false);	// D6
 	DigitalIoPin a5(0, 7, false);	// D7
-
 	LiquidCrystal lcd(&a0, &a1, &a2, &a3, &a4, &a5);
 	lcd.begin(16, 2);
 	lcd.setCursor(0, 1);
 
+	// init Menu
+	DigitalIoPin b1(1, 3, true, true, true);
+	DigitalIoPin b2(0, 9, true, true, true);
+	DigitalIoPin b3(0, 10, true, true, true);
 	Menu menu(&lcd, &b1, &b2, &b3, &Sleep);
 	menu.updateDisplay();
 	m = &menu;
 
 
-	// Modbus
+	// init Modbus
 	LpcPinMap none = {-1, -1};
 	LpcPinMap txpin = { 0, 18 }; // transmit pin that goes to debugger's UART->USB converter
 	LpcPinMap rxpin = { 0, 13 }; // receive pin that goes to debugger's UART->USB converter
@@ -182,7 +182,7 @@ int main(void)
 	ModbusRegister OutputFrequency(&node, 102);
 	ModbusRegister Current(&node, 103);
 
-	// Startup
+	// Modbus Startup
 	ControlWord = 0x0406; // prepare for starting
 	Sleep(1000); // give converter some time to set up
 	ControlWord = 0x047F; // set drive to start mode
@@ -191,25 +191,28 @@ int main(void)
 
 
 	while(1) {
+		menu.checkInputs();
 
 		if(sensorCounter < 0){
 			sensorCounter = 1000;
-			uint8_t *val = I2C.ReadValueI2CM(3);
+			uint8_t val[3];
+			I2C.ReadValueI2CM(val, 3);
 			p->print("\n Values: ");
-			p->print(*val);
-			val++;
-			p->print(" - ");
-			p->print(*val);
-			val++;
-			p->print(" - ");
-			p->print(*val);
+			p->print(val[0]);
 
-			psa = *val;
+			p->print(" - ");
+			p->print(val[1]);
+
+			p->print(" - ");
+			p->print(val[2]);
+
+			psa = val[0];
 			menu.setPsa(psa);
 			//printer.print(I2C.ReadValueI2CM(3));
 		}
 
 		menu.checkInputs();
+
 		if(menu.hasNewValue()){
 			if(menu.getMode()){
 				setFrequency(node, menu.getSpeed()*200);

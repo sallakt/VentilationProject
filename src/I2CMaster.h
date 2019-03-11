@@ -24,7 +24,7 @@ class I2CMaster {
 	public:
 		I2CMaster();
 		virtual ~I2CMaster();
-		uint8_t* ReadValueI2CM(int size);
+		uint8_t* ReadValueI2CM(uint8_t values[], int size);
 	private:
 		void Init_I2C_PinMux(void);
 		void SetupXferRecAndExecute(uint8_t devAddr,
