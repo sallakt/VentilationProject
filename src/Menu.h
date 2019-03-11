@@ -9,6 +9,8 @@
 #define MENU_H_
 #include "LiquidCrystal.h"
 #include "DigitalIoPin.h"
+#include <string>
+#include <atomic>
 
 class Menu {
 public:
@@ -22,6 +24,7 @@ public:
 	void 	updateDisplay();
 	bool 	hasNewValue();		// returns true if the Speed has changed
 	void 	clear();
+	void 	error(std::string msg);
 	virtual ~Menu();
 private:
 	void 	changeMode();
@@ -34,6 +37,8 @@ private:
 	DigitalIoPin *b2;	// UP
 	DigitalIoPin *b3;	// DOWN
 	void (*Sleep)(int);
+	volatile int lpb1;
+	volatile int lpb3;
 };
 
 

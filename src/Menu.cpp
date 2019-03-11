@@ -19,7 +19,7 @@ Menu::Menu(LiquidCrystal *lcd, DigitalIoPin *b1, DigitalIoPin *b2, DigitalIoPin 
 	this->b2 = b2;
 	this->b3 = b3;
 	this->Sleep = fPtr;
-
+	//manualMode = false;
 }
 
 Menu::~Menu() {
@@ -77,29 +77,69 @@ void Menu::setPsa(uint8_t psa){
  */
 void Menu::checkInputs(){
 
-		if(b1->read()){
-			Sleep(3);
-			if(!b1->read()){// if Manual increase speed
-				if(manualMode){
-					if(speed<100){
-						speed++;
-						changed = true;
-					}
+	if(b1->read()){
+		Sleep(3);
+		if(lpb1 % 800){
+			if(manualMode){
+				if(speed<100){
+					speed++;
+					changed = true;
 				}
+			}else{
+				if(psa<120){
+					psa++;
+					changed = true;
+				}
+			}
+		}
+		lpb1++;
+		if(!b1->read()){// if Manual increase speed
+			lpb1 = 0;
+			if(manualMode){
+				if(speed<100){
+					speed++;
+					changed = true;
+				}
+			}else{
+				if(psa<120){
+					psa++;
+					changed = true;
+				}
+			}
 
-			}
 		}
-		if(b3->read()){
-			Sleep(3);
-			if(!b3->read()){// if Manual increase speed
-				if(manualMode){
-					if(speed>0){
-						speed--;
-						changed = true;
-					}
+	}
+	if(b3->read()){
+		Sleep(3);
+		if(lpb3 % 800){
+			if(manualMode){
+				if(speed>0){
+					speed--;
+					changed = true;
+				}
+			}else{
+				if(psa>0){
+					psa--;
+					changed = true;
 				}
 			}
 		}
+		lpb3++;
+		if(!b3->read()){// if Manual increase speed
+			if(manualMode){
+				if(speed>0){
+					speed--;
+					changed = true;
+				}
+			}else{
+				if(psa>0){
+					psa--;
+					changed = true;
+				}
+			}
+			lpb3=0;
+		}
+	}
 
 
 	if(b2->read()){ // Change Mode
@@ -129,6 +169,15 @@ void Menu::updateDisplay(){
 	lcd->print("Pressure: ");
 	lcd->setCursor(11, 1);
 	lcd->print(std::to_string(psa));
+}
+
+void Menu::error(std::string msg){
+	lcd->clear();
+	lcd->setCursor(0, 0);
+	lcd->print("Error: ");
+	lcd->setCursor(0, 1);
+	lcd->print(msg);
+	Sleep(1000);
 }
 
 /*

@@ -117,9 +117,6 @@ bool setFrequency(ModbusMaster& node, uint16_t freq)
 	p->print("\n El:"); // for debugging
 	p->print((int) ctr * delay);
 
-
-
-
 	return atSetpoint;
 }
 
@@ -207,7 +204,7 @@ int main(void)
 			p->print(val[2]);
 
 			psa = val[0];
-			menu.setPsa(psa);
+			if(menu.getMode()) menu.setPsa(psa);
 			//printer.print(I2C.ReadValueI2CM(3));
 		}
 
@@ -215,12 +212,15 @@ int main(void)
 
 		if(menu.hasNewValue()){
 			if(menu.getMode()){
+
 				setFrequency(node, menu.getSpeed()*200);
 			}else{
 				//Calculate Speed
+				menu.getPsa();
 				uint8_t calc = 50; // calculated value
 				setFrequency(node, calc *200);
 				menu.setSpeed(calc);
+				//menu.error("can't reach the PSA");
 			}
 			menu.clear();
 			menu.updateDisplay();
