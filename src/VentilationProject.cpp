@@ -192,7 +192,7 @@ int main(void)
 
 	while(1) {
 		menu.checkInputs();
-		autc.adjust(&I2C, &node);
+		autc.adjust(&I2C, node, &menu, Sleep);
 		if(sensorCounter < 0){
 			sensorCounter = 1000;
 			uint8_t val[3];

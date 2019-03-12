@@ -8,35 +8,7 @@
 #include "AutoCon.h"
 
 #include "ITM_conv.h"
-
-AutoCon::AutoCon(I2CMaster* i2c)//UNFINISHED
-{
-	uint8_t received[3];
-	i2c->ReadValueI2CM(received, 3);
-	baseVal = received[1];
-}
-
-void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster* mbWrite, Menu* menu)//UNFINISHED
-{
-	uint8_t received[3];
-	I2Cread->ReadValueI2CM(received, 3);
-	//READING VALUES FOR TESTING
-	p.print("\n Values: ");
-	p.print(received[0]);
-
-	p.print(" - ");
-	p.print(baseVal);
-
-	int ratio = received[0]/baseVal;
-	setFrequency(mbWrite, menu->getSpeed()*ratio);
-
-}
-
-
-
-
-
-bool setFrequency(ModbusMaster& node, uint16_t freq, void (*Sleep)(int) )
+bool setFrequency(ModbusMaster& node, uint16_t freq, void (*Sleep)(int))
 {
 	int result;
 	int ctr;
@@ -67,3 +39,31 @@ bool setFrequency(ModbusMaster& node, uint16_t freq, void (*Sleep)(int) )
 	//p.print((int) ctr * delay);
 	return atSetpoint;
 }
+
+AutoCon::AutoCon(I2CMaster* i2c)//UNFINISHED
+{
+	uint8_t received[3];
+	i2c->ReadValueI2CM(received, 3);
+	baseVal = received[1];
+}
+
+void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster& mbWrite, Menu* menu, void (*Sleep)(int))//UNFINISHED
+{
+	uint8_t received[3];
+	I2Cread->ReadValueI2CM(received, 3);
+	//READING VALUES FOR TESTING
+	p.print("\n Values: ");
+	p.print(received[0]);
+
+	p.print(" - ");
+	p.print(baseVal);
+
+	int ratio = received[0]/baseVal;
+	setFrequency(mbWrite, (uint16_t) menu->getSpeed()+(menu->getSpeed()*ratio), Sleep);
+
+}
+
+
+
+
+

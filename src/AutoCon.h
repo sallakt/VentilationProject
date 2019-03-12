@@ -23,7 +23,7 @@ class AutoCon
 public:
 	AutoCon(I2CMaster* i2c);
 	virtual ~AutoCon(){};
-	void adjust(I2CMaster* I2Cread, ModbusMaster* mbWrite, Menu* menu);
+	void adjust(I2CMaster* I2Cread, ModbusMaster& mbWrite, Menu* menu, void (*Sleep)(int));
 
 private:
 	uint8_t baseVal;
