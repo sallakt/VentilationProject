@@ -5,14 +5,15 @@
  *      Author: vovan
  */
 
-#ifndef AUTONCON_H_
-#define AUTONCON_H_
+#ifndef AUTOCON_H_
+#define AUTOCON_H_
 #include "I2C.h"
 #include "I2CMaster.h"
 #include "ModbusMaster.h"
 #include "ModbusRegister.h"
 #include "ITM_conv.h"
 #include "ITM_write.h"
+#include "Menu.h"
 
 
 //UNFINISHED
@@ -22,7 +23,7 @@ class AutoCon
 public:
 	AutoCon(I2CMaster* i2c);
 	virtual ~AutoCon(){};
-	void adjust(I2CMaster* I2Cread, ModbusMaster* mbWrite);
+	void adjust(I2CMaster* I2Cread, ModbusMaster* mbWrite, Menu* menu);
 
 private:
 	uint8_t baseVal;
@@ -31,4 +32,4 @@ private:
 
 };
 
-#endif /* AUTONCON_H_ */
+#endif /* AUTOCON_H_ */

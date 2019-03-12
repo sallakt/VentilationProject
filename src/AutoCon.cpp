@@ -5,7 +5,8 @@
  *      Author: vovan
  */
 
-#include "AutonCon.h"
+#include "AutoCon.h"
+
 #include "ITM_conv.h"
 
 AutoCon::AutoCon(I2CMaster* i2c)//UNFINISHED
@@ -15,7 +16,7 @@ AutoCon::AutoCon(I2CMaster* i2c)//UNFINISHED
 	baseVal = received[1];
 }
 
-void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster* mbWrite)//UNFINISHED
+void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster* mbWrite, Menu* menu)//UNFINISHED
 {
 	uint8_t received[3];
 	I2Cread->ReadValueI2CM(received, 3);
@@ -25,6 +26,10 @@ void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster* mbWrite)//UNFINISHED
 
 	p.print(" - ");
 	p.print(baseVal);
+
+	int ratio = received[0]/baseVal;
+	setFrequency(mbWrite, menu->getSpeed()*ratio);
+
 }
 
 

@@ -41,6 +41,7 @@
 #include "ModbusMaster.h"
 #include "ModbusRegister.h"
 #include "LpcUart.h"
+#include "AutoCon.h"
 
 static volatile std::atomic_int counter;
 static volatile std::atomic_int sensorCounter;
@@ -179,6 +180,8 @@ int main(void)
 	ModbusRegister OutputFrequency(&node, 102);
 	ModbusRegister Current(&node, 103);
 
+	//Object for auto control
+	AutoCon autc(&I2C);
 	// Modbus Startup
 	ControlWord = 0x0406; // prepare for starting
 	Sleep(1000); // give converter some time to set up
@@ -189,7 +192,7 @@ int main(void)
 
 	while(1) {
 		menu.checkInputs();
-
+		autc.adjust(&I2C, &node);
 		if(sensorCounter < 0){
 			sensorCounter = 1000;
 			uint8_t val[3];
