@@ -191,9 +191,10 @@ int main(void)
 
 
 	while(1) {
-		menu.checkInputs();
+		//menu.checkInputs();
+//		setFrequency(node, 8000);
 		autc.adjust(&I2C, node, &menu, Sleep);
-		if(sensorCounter < 0){
+	/*	if(sensorCounter < 0){
 			sensorCounter = 1000;
 			uint8_t val[3];
 			I2C.ReadValueI2CM(val, 3);
@@ -228,7 +229,7 @@ int main(void)
 			menu.clear();
 			menu.updateDisplay();
 		}
-
+*/
 
 	}
 

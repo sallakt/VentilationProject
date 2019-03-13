@@ -44,7 +44,7 @@ AutoCon::AutoCon(I2CMaster* i2c)//UNFINISHED
 {
 	uint8_t received[3];
 	i2c->ReadValueI2CM(received, 3);
-	baseVal = received[1];
+	baseVal = 255;
 }
 
 void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster& mbWrite, Menu* menu, void (*Sleep)(int))//UNFINISHED
@@ -53,13 +53,13 @@ void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster& mbWrite, Menu* menu, void
 	I2Cread->ReadValueI2CM(received, 3);
 	//READING VALUES FOR TESTING
 	p.print("\n Values: ");
-	p.print(received[0]);
+	p.print(received[1]);
 
 	p.print(" - ");
 	p.print(baseVal);
 
-	int ratio = received[0]/baseVal;
-	setFrequency(mbWrite, (uint16_t) menu->getSpeed()+(menu->getSpeed()*ratio), Sleep);
+	float ratio = ((float)baseVal)/(float)received[1];
+	setFrequency(mbWrite, 10000+(10000*ratio), Sleep);
 
 }
 
