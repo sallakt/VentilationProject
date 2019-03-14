@@ -27,11 +27,15 @@ class AutoCon
 public:
 	AutoCon(I2CMaster* i2c);
 	virtual ~AutoCon(){};
-	void adjust(I2CMaster* I2Cread, float input, ModbusMaster& mbWrite, void (*Sleep)(int));
-
+	uint32_t adjust(I2CMaster* I2Cread, float input, ModbusMaster& mbWrite, void (*Sleep)(int));
+	void setFreq(int freq);
+	bool goalReached();
+	void newGoal();
 private:
 	uint8_t baseVal;
 	ITM_conv p; //FOR TESTING
+	int freq = 0;
+	bool reached = false;
 };
 
 #endif /* AUTOCON_H_ */

@@ -46,6 +46,11 @@ uint8_t Menu::getSpeed(){
  */
 void Menu::setSpeed(uint8_t speed){
 	if(!manualMode && (speed <= 100 || speed >= 0)){
+
+		if(this->speed != speed){
+			changed = true;
+			goal = true;
+			}
 		this->speed = speed;
 	}
 }
@@ -141,15 +146,6 @@ void Menu::checkInputs(){
 		}
 	}
 
-
-	if(b2->read()){ // Change Mode
-		Sleep(3);
-		if(!b2->read()){
-			changeMode();
-			changed = true;
-		}
-	}
-
 }
 
 /*
@@ -177,7 +173,8 @@ void Menu::error(std::string msg){
 	lcd->print("Error: ");
 	lcd->setCursor(0, 1);
 	lcd->print(msg);
-	Sleep(1000);
+	Sleep(2000);
+	changed= true;
 }
 
 /*
@@ -189,6 +186,11 @@ bool Menu::hasNewValue(){
 	return val;
 }
 
+bool Menu::hasNewGoal(){
+	bool val = goal;
+	goal = false;
+	return val;
+}
 /*
  *  Returns the current mode
  *  TRUE = Manualmode
@@ -203,4 +205,6 @@ bool Menu::getMode(){
  */
 void Menu::changeMode(){
 	manualMode = !manualMode;
+	changed = true;
+	if(!manualMode) goal=true;
 }

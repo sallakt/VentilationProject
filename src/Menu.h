@@ -23,21 +23,24 @@ public:
 	bool 	getMode();
 	void 	updateDisplay();
 	bool 	hasNewValue();		// returns true if the Speed has changed
+	bool 	hasNewGoal();
 	void 	clear();
 	void 	error(std::string msg);
+	void 	changeMode();
 	virtual ~Menu();
 private:
-	void 	changeMode();
 	bool	manualMode = true;
 	uint8_t speed = 0;
 	uint8_t	psa = 0;
 	bool 	changed = false;
+	bool 	goal = false;
 	LiquidCrystal *lcd;
 	DigitalIoPin *b1;	// MODE
 	DigitalIoPin *b2;	// UP
 	DigitalIoPin *b3;	// DOWN
 	void (*Sleep)(int);
 	volatile int lpb1;
+	volatile int lpb2;
 	volatile int lpb3;
 };
 

@@ -45,6 +45,7 @@
 
 static volatile std::atomic_int counter;
 static volatile std::atomic_int sensorCounter;
+static volatile std::atomic_int timeout;
 static volatile uint32_t systicks;
 
 #define TICKRATE_HZ1 (1000)
@@ -60,6 +61,7 @@ extern "C" {
 	#endif
 	void SysTick_Handler(void)
 	{
+		timeout++;
 		systicks++;
 		sensorCounter--;
 		if(counter > 0)
@@ -129,7 +131,7 @@ bool setFrequency(ModbusMaster& node, uint16_t freq)
 int main(void)
 {
 	uint32_t sysTickRate;
-	uint32_t psa = 30;
+	int16_t psa = 30;
 
 	/* Setup System */
 	SystemCoreClockUpdate();
@@ -191,45 +193,83 @@ int main(void)
 
 
 	while(1) {
-		menu.checkInputs();
 
-		if(sensorCounter < 0){
-			sensorCounter = 1000;
-			uint8_t val[3];
-			I2C.ReadValueI2CM(val, 3);
-			p->print("\n Values: ");
-			p->print(val[0]);
 
-			p->print(" - ");
-			p->print(val[1]);
-
-			p->print(" - ");
-			p->print(val[2]);
-
-			psa = val[0];
-			if(menu.getMode()) menu.setPsa(psa);
-			//printer.print(I2C.ReadValueI2CM(3));
+		if(b2.read()){ // Change Mode
+			//Sleep(8);
+			//if(!b2.read()){
+				menu.changeMode();
+			//}
+			while(b2.read()){};
 		}
 
 		menu.checkInputs();
 
+		//menu.checkInputs();
+//		setFrequency(node, 8000);
+//		autc.adjust(&I2C, 90, node, Sleep);
+		if(sensorCounter < 0){
+				sensorCounter = 1000;
+				uint8_t val[3];
+				I2C.ReadValueI2CM(val, 3);
+				p->print("\n Values: ");
+				p->print(val[0]);
+
+				p->print(" - ");
+				p->print(val[1]);
+
+				p->print(" - ");
+				p->print(val[2]);
+
+				int16_t pres = ((int16_t)val[0] << 8) | val[1];
+				psa = pres / 240 * 0.95f;
+
+				p->print(" => ");
+				if(pres > 0){
+					p->print(pres);
+				}else{
+					p->print('-');
+					p->print(pres*1);
+
+				}
+
+
+
+				if(menu.getMode()) menu.setPsa(psa);
+				//printer.print(I2C.ReadValueI2CM(3));
+
+				// Heartbeat
+				setFrequency(node, menu.getSpeed()*200);
+		}
+
+		menu.checkInputs();
+		if(!menu.getMode()){
+
+			if(menu.hasNewGoal()){
+				timeout = 0;
+				autc.newGoal();
+				autc.setFreq(menu.getSpeed()*200);
+			}
+
+			if(timeout > 15000 && !autc.goalReached()){
+				menu.error("Can`t reach psa");
+				timeout = 0;
+			}
+
+			//Calculate Speed
+
+			menu.setSpeed(autc.adjust(&I2C, menu.getPsa(), node, Sleep)/200);
+
+			//menu.error("can't reach the PSA");
+		}
 		if(menu.hasNewValue()){
 			if(menu.getMode()){
 
 				setFrequency(node, menu.getSpeed()*200);
-			}else{
-				//Calculate Speed
-				menu.getPsa();
-				uint8_t calc = 50; // calculated value
-				setFrequency(node, calc *200);
-				menu.setSpeed(calc);
-				//menu.error("can't reach the PSA");
 			}
 			menu.clear();
 			menu.updateDisplay();
 		}
-
-
 	}
 
 
