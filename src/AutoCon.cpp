@@ -47,7 +47,7 @@ AutoCon::AutoCon(I2CMaster* i2c)//UNFINISHED
 	baseVal = 255;
 }
 
-void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster& mbWrite, Menu* menu, void (*Sleep)(int))//UNFINISHED
+void AutoCon::adjust(I2CMaster* I2Cread, float input, ModbusMaster& mbWrite, void (*Sleep)(int))//UNFINISHED
 {
 	uint8_t received[3];
 	I2Cread->ReadValueI2CM(received, 3);
@@ -57,9 +57,13 @@ void AutoCon::adjust(I2CMaster* I2Cread, ModbusMaster& mbWrite, Menu* menu, void
 
 	p.print(" - ");
 	p.print(baseVal);
+	float diff = input - received[0];
+	if(diff >= 0)
+	{
+		int freq = (int)minFreq + (diff/maxPress)*(maxFreq - minFreq);
+		setFrequency(mbWrite, freq, Sleep);
+	}
 
-	float ratio = ((float)baseVal)/(float)received[1];
-	setFrequency(mbWrite, 10000+(10000*ratio), Sleep);
 
 }
 

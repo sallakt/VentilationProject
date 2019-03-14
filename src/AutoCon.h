@@ -7,6 +7,8 @@
 
 #ifndef AUTOCON_H_
 #define AUTOCON_H_
+
+
 #include "I2C.h"
 #include "I2CMaster.h"
 #include "ModbusMaster.h"
@@ -15,6 +17,9 @@
 #include "ITM_write.h"
 #include "Menu.h"
 
+#define minFreq 2000.00000
+#define maxFreq 20000.00000
+#define maxPress 120.00000
 
 //UNFINISHED
 class AutoCon
@@ -23,7 +28,7 @@ class AutoCon
 public:
 	AutoCon(I2CMaster* i2c);
 	virtual ~AutoCon(){};
-	void adjust(I2CMaster* I2Cread, ModbusMaster& mbWrite, Menu* menu, void (*Sleep)(int));
+	void adjust(I2CMaster* I2Cread, float input, ModbusMaster& mbWrite, void (*Sleep)(int));
 
 private:
 	uint8_t baseVal;
