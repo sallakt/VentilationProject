@@ -8,7 +8,6 @@
 #ifndef AUTOCON_H_
 #define AUTOCON_H_
 
-
 #include "I2C.h"
 #include "I2CMaster.h"
 #include "ModbusMaster.h"
@@ -17,9 +16,9 @@
 #include "ITM_write.h"
 #include "Menu.h"
 
-#define minFreq 2000.00000
-#define maxFreq 20000.00000
-#define maxPress 120.00000
+#define minFreq 0.0
+#define maxFreq 20000.0
+#define maxPress 120.0
 
 //UNFINISHED
 class AutoCon
@@ -33,8 +32,6 @@ public:
 private:
 	uint8_t baseVal;
 	ITM_conv p; //FOR TESTING
-
-
 };
 
 #endif /* AUTOCON_H_ */
