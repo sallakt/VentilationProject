@@ -44,16 +44,12 @@
 #include "AutoCon.h"
 
 static volatile std::atomic_int counter;
-static volatile std::atomic_int sensorCounter;
-static volatile std::atomic_int timeout;
-static volatile uint32_t systicks;
+static volatile std::atomic_int sensorCounter; // Delay for heartbeat and read sensor
+static volatile std::atomic_int timeout; // error timeout
 
 #define TICKRATE_HZ1 (1000)
-#define TASK (1)
 
-ITM_conv *p;
-Menu *m;
-I2CMaster *i;
+ITM_conv *p; // Logger
 
 
 #ifdef __cplusplus
@@ -62,7 +58,6 @@ extern "C" {
 	void SysTick_Handler(void)
 	{
 		timeout++;
-		systicks++;
 		sensorCounter--;
 		if(counter > 0)
 		{
@@ -85,11 +80,9 @@ void Sleep(int ms)
 		__WFI();
 	}
 }
-
-uint32_t millis() {
-	return systicks;
-}
-
+/**
+ * Send the frequency for the Motor via modbus
+ */
 bool setFrequency(ModbusMaster& node, uint16_t freq)
 {
 	int result;
@@ -117,21 +110,15 @@ bool setFrequency(ModbusMaster& node, uint16_t freq)
 		if (result >= 0 && (result & 0x0100)) atSetpoint = true;
 		ctr++;
 	} while(ctr < 20 && !atSetpoint);
-	p->print("\n El:"); // for debugging
-	p->print((int) ctr * delay);
 
 	return atSetpoint;
 }
 
 
-
-
-
-
 int main(void)
 {
 	uint32_t sysTickRate;
-	int16_t psa = 30;
+	int16_t psa = 0;
 
 	/* Setup System */
 	SystemCoreClockUpdate();
@@ -141,8 +128,9 @@ int main(void)
 	SysTick_Config(sysTickRate / TICKRATE_HZ1);
 
 	Chip_RIT_Init(LPC_RITIMER);
+
+	// init Logger
 	I2CMaster I2C;
-	i = &I2C;
 	ITM_conv printer;
 	p = &printer;
 
@@ -164,7 +152,6 @@ int main(void)
 	DigitalIoPin b3(0, 10, true, true, true);
 	Menu menu(&lcd, &b1, &b2, &b3, &Sleep);
 	menu.updateDisplay();
-	m = &menu;
 
 
 	// init Modbus
@@ -174,7 +161,6 @@ int main(void)
 	LpcUartConfig cfg = { LPC_USART0, 115200, UART_CFG_DATALEN_8 | UART_CFG_PARITY_NONE | UART_CFG_STOPLEN_1, false, txpin, rxpin, none, none };
 	LpcUart dbgu(cfg);
 	Chip_SWM_MovablePortPinAssign(SWM_SWO_O, 1, 2); // Needed for SWO printf
-
 	ModbusMaster node(2); // Create modbus object that connects to slave id 2
 	node.begin(9600); // set transmission rate - other parameters are set inside the object and can't be changed here
 	ModbusRegister ControlWord(&node, 0);
@@ -182,89 +168,72 @@ int main(void)
 	ModbusRegister OutputFrequency(&node, 102);
 	ModbusRegister Current(&node, 103);
 
-	//Object for auto control
-	AutoCon autc(&I2C);
 	// Modbus Startup
 	ControlWord = 0x0406; // prepare for starting
 	Sleep(1000); // give converter some time to set up
 	ControlWord = 0x047F; // set drive to start mode
 	Sleep(1000);
 
+	//Object for auto control
+	AutoCon autc(&I2C);
 
 
 	while(1) {
 
-
-		if(b2.read()){ // Change Mode
-			//Sleep(8);
-			//if(!b2.read()){
-				menu.changeMode();
-			//}
-			while(b2.read()){};
-		}
-
+		// reads the menu buttons
 		menu.checkInputs();
 
-		//menu.checkInputs();
-//		setFrequency(node, 8000);
-//		autc.adjust(&I2C, 90, node, Sleep);
-		if(sensorCounter < 0){
-				sensorCounter = 1000;
+		// 1 Sec intervall to read the Sensor and send heartbeat to modbus in manualmode
+		if(sensorCounter < 0 && menu.getMode()){
+				sensorCounter = 1000; // reset delay to 1s
+
 				uint8_t val[3];
 				I2C.ReadValueI2CM(val, 3);
-				p->print("\n Values: ");
-				p->print(val[0]);
-
-				p->print(" - ");
-				p->print(val[1]);
-
-				p->print(" - ");
-				p->print(val[2]);
-
+				// combine the frst to bits to get the presure differenze
 				int16_t pres = ((int16_t)val[0] << 8) | val[1];
+				// calculate the presure on the altitude of 0 m
 				psa = pres / 240 * 0.95f;
 
-				p->print(" => ");
-				if(pres > 0){
-					p->print(pres);
-				}else{
-					p->print('-');
-					p->print(pres*1);
+				p->print("\n PSA: ");
+				p->print(psa);
 
-				}
-
-
-
+				// update the psa value for the manualmode
 				if(menu.getMode()) menu.setPsa(psa);
-				//printer.print(I2C.ReadValueI2CM(3));
 
-				// Heartbeat
+				// Heartbeat for the modbus
 				setFrequency(node, menu.getSpeed()*200);
 		}
 
-		menu.checkInputs();
+		// Automode
 		if(!menu.getMode()){
-
+			// Set a new target psa
 			if(menu.hasNewGoal()){
 				timeout = 0;
 				autc.newGoal();
 				autc.setFreq(menu.getSpeed()*200);
 			}
 
+			// Displays error message after 15s if the goal is not reached
 			if(timeout > 15000 && !autc.goalReached()){
 				menu.error("Can`t reach psa");
 				timeout = 0;
 			}
 
-			//Calculate Speed
+			//Calculate motor frequency
+			uint32_t result = autc.adjust(&I2C, menu.getPsa());
+			setFrequency(node, result);
 
-			menu.setSpeed(autc.adjust(&I2C, menu.getPsa(), node, Sleep)/200);
+			/* Update displayed speed
+			 * freq / 200 = Speed in %
+			 */
+			menu.setSpeed(result/200);
 
-			//menu.error("can't reach the PSA");
 		}
+
+		// Updates display if there are new Values to display
 		if(menu.hasNewValue()){
 			if(menu.getMode()){
-
+				// Set the motor frequency based on the value from the menu
 				setFrequency(node, menu.getSpeed()*200);
 			}
 			menu.clear();

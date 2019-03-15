@@ -16,19 +16,19 @@ class Menu {
 public:
 			Menu(LiquidCrystal *lcd, DigitalIoPin *b1, DigitalIoPin *b2, DigitalIoPin *b3, void (*fPtr)(int));
 	uint8_t getSpeed();
-	void 	setSpeed(uint8_t speed); // only for Automatic
-	void 	setPsa(uint8_t psa);
+	void 	setSpeed(uint8_t speed); 	// only for Automaticmode
+	void 	setPsa(uint8_t psa);		// only for Manualmode
 	uint8_t getPsa();
-	void 	checkInputs();	// Check the state of all Buttons
+	void 	checkInputs();		// Check the state of all Buttons
 	bool 	getMode();
 	void 	updateDisplay();
 	bool 	hasNewValue();		// returns true if the Speed has changed
 	bool 	hasNewGoal();
 	void 	clear();
 	void 	error(std::string msg);
-	void 	changeMode();
 	virtual ~Menu();
 private:
+	void 	changeMode();
 	bool	manualMode = true;
 	uint8_t speed = 0;
 	uint8_t	psa = 0;

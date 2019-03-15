@@ -26,23 +26,26 @@ Menu::~Menu() {
 	clear();
 }
 
+/**
+ * Clears the display
+ */
 void Menu::clear(){
 	lcd->clear();
 }
 
 
-/*
- * Retruns the Speed value
- * Used in Manualmode
+/**
+ * @return the speed value
+ * Used in manualmode
  */
 uint8_t Menu::getSpeed(){
 	return speed;
 }
 
-/*
- * Set the Speed value to print it on the display
- * Used in Automaticmode to display the calculated value
- * @param uint8_t s - calculated speed mode from the Automaticmode
+/**
+ * Set the speed value to print it on the display
+ * Used in automaticmode to display the calculated value
+ * @param uint8_t s - calculated speed mode from the automaticmode
  */
 void Menu::setSpeed(uint8_t speed){
 	if(!manualMode && (speed <= 100 || speed >= 0)){
@@ -55,16 +58,17 @@ void Menu::setSpeed(uint8_t speed){
 	}
 }
 
-/*
- * Retruns the displayed PSA value
+/**
+ * @return the displayed pressure value
+ *
  */
 uint8_t Menu::getPsa(){
 	return psa;
 }
 
-/*
+/**
  * Set the PSA value to print it on the display
- * @param uint8_t psa - calculated psa value from the sensor
+ * @param uint8_t psa - calculated pressure value from the sensor
  */
 void Menu::setPsa(uint8_t psa){
 	if(psa > 0){
@@ -76,14 +80,17 @@ void Menu::setPsa(uint8_t psa){
 
 }
 
-/*
- * Check all Buttons if there is some new userinput
- * eventually move this to the main and add two new Methods (incSpeed / decSpeed)
+/**
+ * Check all buttons if there is some new userinput
+ * b1 = UP
+ * b2 = Change mode
+ * b3 = DOWN
  */
 void Menu::checkInputs(){
 
 	if(b1->read()){
 		Sleep(3);
+		// Longpress
 		if(lpb1 % 800){
 			if(manualMode){
 				if(speed<100){
@@ -116,6 +123,7 @@ void Menu::checkInputs(){
 	}
 	if(b3->read()){
 		Sleep(3);
+		// Longpress
 		if(lpb3 % 800){
 			if(manualMode){
 				if(speed>0){
@@ -130,7 +138,7 @@ void Menu::checkInputs(){
 			}
 		}
 		lpb3++;
-		if(!b3->read()){// if Manual increase speed
+		if(!b3->read()){
 			if(manualMode){
 				if(speed>0){
 					speed--;
@@ -146,12 +154,19 @@ void Menu::checkInputs(){
 		}
 	}
 
+	if(b2->read()){ // Change Mode
+		changeMode();
+		// blocks all inputs while the button is pressed
+		while(b2->read()){};
+	}
+
 }
 
-/*
- * Update the data on the Display
+/**
+ * Update the data on the display
  */
 void Menu::updateDisplay(){
+	// Display Speed
 	lcd->setCursor(0, 0);
 	lcd->print("Fan Speed: ");
 	lcd->setCursor(11, 0);
@@ -161,12 +176,17 @@ void Menu::updateDisplay(){
 	lcd->setCursor(15, 0);
 	lcd->print(manualMode ? "M" : "A");
 
+	// Display Pressure
 	lcd->setCursor(0, 1);
 	lcd->print("Pressure: ");
 	lcd->setCursor(11, 1);
 	lcd->print(std::to_string(psa));
 }
 
+/**
+ * Display error message for two seconds
+ * @param std::string msg - error message (max length 16 characters)
+ */
 void Menu::error(std::string msg){
 	lcd->clear();
 	lcd->setCursor(0, 0);
@@ -177,8 +197,9 @@ void Menu::error(std::string msg){
 	changed= true;
 }
 
-/*
- * Returns true if the user changed in manualmode the speed;
+/**
+ *
+ * @return TRUE if mode, speed or pressure changed
  */
 bool Menu::hasNewValue(){
 	bool val = changed;
@@ -186,13 +207,17 @@ bool Menu::hasNewValue(){
 	return val;
 }
 
+/**
+ * @return TRUE if the pressure changed in automaticmode
+ * or the mode is changed to automaticmode
+ */
 bool Menu::hasNewGoal(){
 	bool val = goal;
 	goal = false;
 	return val;
 }
-/*
- *  Returns the current mode
+/**
+ *  @return the current mode
  *  TRUE = Manualmode
  *  FALSE = Automaticmode
  */
@@ -200,7 +225,7 @@ bool Menu::getMode(){
 	return manualMode;
 }
 
-/*
+/**
  * Changed the mode between Manual and Automatic
  */
 void Menu::changeMode(){
